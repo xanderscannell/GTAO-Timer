@@ -7,6 +7,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // We'll use this to store the ID of our setInterval, so we can stop it later
     let timerInterval = null;
 
+    // --- NEW ---
+    // We'll store the last displayed time string here.
+    // This prevents us from updating the button text if the time hasn't changed.
+    let lastDisplayedTime = "";
+
     // --- Main Click Event Handler ---
     timerButton.addEventListener("click", () => {
         const currentState = timerButton.dataset.state;
@@ -35,13 +40,19 @@ document.addEventListener("DOMContentLoaded", () => {
         timerButton.dataset.state = "cooldown";
         timerButton.disabled = true; // Disable the button so it can't be clicked
 
+        // --- NEW ---
+        // Clear any previously stored time
+        lastDisplayedTime = ""; 
+
         // Run the updateTimer function immediately to show the initial time
         updateTimer(endTime); 
 
-        // Run the updateTimer function every second (1000ms)
+        // --- MODIFIED ---
+        // Run the updateTimer function every 100 milliseconds (10 times a second).
+        // This is much faster and will catch the exact moment the second changes.
         timerInterval = setInterval(() => {
             updateTimer(endTime);
-        }, 1000);
+        }, 100);
     }
 
     /**
@@ -51,10 +62,18 @@ document.addEventListener("DOMContentLoaded", () => {
     function updateTimer(endTime) {
         // Get the remaining milliseconds
         const remainingTime = endTime - Date.now();
+        
+        // --- NEW ---
+        // We'll build the new time string that *should* be displayed.
+        let newTimeHTML;
 
         if (remainingTime <= 0) {
             // --- Timer Finished ---
+            // Stop the interval *before* calling finishTimer
+            clearInterval(timerInterval);
             finishTimer();
+            // We return here because finishTimer() will set the final text
+            return; 
         } else {
             // --- Timer Running ---
             // Convert remaining time to minutes and seconds
@@ -66,7 +85,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const formattedSeconds = String(seconds).padStart(2, '0');
 
             // Update the button's text (using <br> for the new line)
-            timerButton.innerHTML = `Timer<br>${formattedMinutes}:${formattedSeconds}`;
+            newTimeHTML = `Timer<br>${formattedMinutes}:${formattedSeconds}`;
+        }
+
+        // --- NEW ---
+        // Only update the button's text if the new time is different
+        // from what's already displayed. This is the key to fixing the "skip"
+        // and improving performance.
+        if (newTimeHTML !== lastDisplayedTime) {
+            timerButton.innerHTML = newTimeHTML;
+            lastDisplayedTime = newTimeHTML; // Store the new time
         }
     }
 
@@ -74,10 +102,16 @@ document.addEventListener("DOMContentLoaded", () => {
      * Stops the interval and sets the button to its "ready" (green) state.
      */
     function finishTimer() {
-        clearInterval(timerInterval); // Stop the countdown
+        clearInterval(timerInterval); // Stop the countdown (good to have here too)
         timerButton.dataset.state = "ready";
         timerButton.disabled = false; // Re-enable the button
-        timerButton.innerHTML = "Timer<br>00:00";
+        
+        const finishedTimeHTML = "Timer<br>00:00";
+        // Only update if it's not already "00:00"
+        if (lastDisplayedTime !== finishedTimeHTML) {
+            timerButton.innerHTML = finishedTimeHTML;
+            lastDisplayedTime = finishedTimeHTML;
+        }
     }
 
     /**
@@ -86,5 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function resetTimer() {
         timerButton.dataset.state = "default";
         timerButton.innerHTML = "Timer";
+        lastDisplayedTime = "Timer"; // Update our stored text
     }
 });
+
