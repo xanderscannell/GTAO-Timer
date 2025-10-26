@@ -1,13 +1,34 @@
 // Wait for the entire HTML document to be loaded before running the script
 document.addEventListener("DOMContentLoaded", () => {
     
-    // Get the button from the page
+    // --- Get all our elements ---
     const timerButton = document.getElementById("timerButton");
+    const darkModeToggle = document.getElementById("darkModeToggle");
     
+    // --- Theme Toggle Logic ---
+    
+    // 1. Check for saved theme in localStorage
+    const savedTheme = localStorage.getItem("theme") || "light";
+    document.body.dataset.theme = savedTheme;
+
+    // 2. Add click event for the toggle button
+    darkModeToggle.addEventListener("click", () => {
+        let currentTheme = document.body.dataset.theme;
+        let newTheme = currentTheme === "light" ? "dark" : "light";
+        
+        // Update the <body> attribute
+        document.body.dataset.theme = newTheme;
+        
+        // Save the new theme to localStorage
+        localStorage.setItem("theme", newTheme);
+    });
+
+
+    // --- Timer Logic (Existing) ---
+
     // We'll use this to store the ID of our setInterval, so we can stop it later
     let timerInterval = null;
 
-    // --- NEW ---
     // We'll store the last displayed time string here.
     // This prevents us from updating the button text if the time hasn't changed.
     let lastDisplayedTime = "";
@@ -132,5 +153,4 @@ document.addEventListener("DOMContentLoaded", () => {
         lastDisplayedTime = "Timer"; // Update our stored text
     }
 });
-
 
