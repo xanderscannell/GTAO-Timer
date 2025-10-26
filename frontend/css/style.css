@@ -13,7 +13,6 @@ body[data-theme="dark"] {
     --toggle-icon-color: #f4f7f6;
 }
 
-/* --- MODIFIED --- */
 /* Basic page setup */
 html {
     height: 100%;
@@ -22,22 +21,19 @@ html {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* We use flexbox to center the content vertically and horizontally */
 body {
     width: 100%;
-    min-height: 100%; /* Ensure it fills at least the whole screen */
+    min-height: 100%;
     margin: 0;
     display: flex;
     flex-direction: column;
-    align-items: center; /* Center horizontally */
-    padding: 2rem 0; /* Add some padding at top/bottom */
-    box-sizing: border-box; /* Include padding in height calculation */
+    align-items: center;
+    padding: 2rem 0;
+    box-sizing: border-box;
     
-    /* Use the CSS variable */
     background-color: var(--bg-color);
     color: var(--text-color);
     
-    /* Add a smooth transition for the color change */
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -47,14 +43,12 @@ body {
     top: 20px;
     right: 20px;
     
-    /* Remove default button styles */
     background: none;
     border: none;
     cursor: pointer;
     padding: 8px;
     border-radius: 50%;
     
-    /* Style the icons */
     color: var(--toggle-icon-color);
     transition: color 0.3s ease, transform 0.2s ease;
 }
@@ -83,7 +77,7 @@ body[data-theme="dark"] .moon-icon {
     display: none;
 }
 
-/* --- Title Style (Unchanged) --- */
+/* --- Title Style --- */
 .main-title {
     font-size: 2.2rem;
     font-weight: 600;
@@ -93,41 +87,32 @@ body[data-theme="dark"] .moon-icon {
     transition: color 0.3s ease;
 }
 
-/* --- REMOVED .timer-container --- */
-
-/* --- NEW: Timer Grid Container --- */
+/* --- Timer Grid Container --- */
 .timer-grid {
     display: grid;
-    /* This creates 6 equal-width columns */
     grid-template-columns: repeat(6, 1fr);
-    /* Add some spacing between the buttons */
     gap: 16px; 
     
-    /* Set a max width for the grid */
     width: 90%;
     max-width: 1400px;
-    margin-top: 1rem; /* Space below the title */
+    margin-top: 1rem;
 }
 
-/* --- MODIFIED --- */
+/* --- Timer Button --- */
 .timer-button {
-    /* Sizing and layout */
-    width: 100%; /* <-- CHANGED: Button now fills its grid cell */
+    width: 100%;
     height: 100px;
     padding: 1rem;
     
-    /* Font styles */
     font-size: 1.5rem;
     font-weight: bold;
     color: white;
-    line-height: 1.4; /* Allows for the two-line text */
+    line-height: 1.4;
     
-    /* Appearance */
     border: none;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     
-    /* Interaction */
     cursor: pointer;
     transition: all 0.2s ease-in-out;
 }
@@ -137,16 +122,16 @@ body[data-theme="dark"] .moon-icon {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
-/* --- STATE STYLES (Unchanged) --- */
+/* --- STATE STYLES --- */
 
 /* 1. Default state (blue) */
 .timer-button[data-state="default"] {
-    background-color: #007aff; /* A nice blue */
+    background-color: #007aff;
 }
 
 /* 2. Cooldown state (grey) */
 .timer-button[data-state="cooldown"] {
-    background-color: #8e8e93; /* A neutral grey */
+    background-color: #8e8e93;
     cursor: not-allowed;
     transform: none;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -154,5 +139,42 @@ body[data-theme="dark"] .moon-icon {
 
 /* 3. Ready state (green) */
 .timer-button[data-state="ready"] {
-    background-color: #34c759; /* A vibrant green */
+    background-color: #34c759;
+}
+
+/* 4. === NEW: Paused state (orange) === */
+.timer-button[data-state="paused"] {
+    background-color: #ff9500; /* A warning orange */
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* === NEW: Universal Button Styles === */
+.universal-buttons {
+    display: flex;
+    gap: 20px;
+    margin-top: 2rem; /* Space above the buttons */
+}
+
+.u-button {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: white;
+    background-color: #5856d6; /* A nice purple */
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.u-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.u-button-danger {
+    background-color: #ff3b30; /* A danger red */
 }
