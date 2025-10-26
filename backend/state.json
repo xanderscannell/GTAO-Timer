@@ -3,63 +3,93 @@
   "timers": {
     "Cayo Perico": {
       "state": "paused",
-      "remaining": "8624979"
+      "endTime": "1761531376727",
+      "remaining": 8586940
     },
     "Dre Contract": {
       "state": "paused",
-      "remaining": "2865351"
+      "endTime": "1761525617099",
+      "remaining": 2827312
     },
     "Acid": {
-      "state": "default"
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     },
     "Bunker": {
-      "state": "default"
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     },
     "Cocaine": {
-      "state": "default"
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     },
     "Meth": {
-      "state": "default"
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     },
     "Weed": {
-      "state": "default"
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     },
     "Cash Creation": {
       "state": "paused",
-      "remaining": "9225761"
+      "endTime": "1761531977509",
+      "remaining": 9187722
     },
     "Doc. Forgery": {
       "state": "paused",
-      "remaining": "9226086"
+      "endTime": "1761531977834",
+      "remaining": 9188047
     },
     "Warehouse 1": {
-      "state": "default"
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     },
     "Warehouse 2": {
-      "state": "default"
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     },
     "Warehouse 3": {
-      "state": "default"
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     },
     "Warehouse 4": {
-      "state": "default"
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     },
     "Warehouse 5": {
-      "state": "default"
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     },
     "Hanger": {
-      "state": "default"
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     },
     "Nightclub": {
       "state": "paused",
-      "remaining": "5746736"
+      "endTime": "1761528498484",
+      "remaining": 5708697
     },
     "Tow Truck": {
       "state": "paused",
-      "remaining": "14387091"
+      "endTime": "1761537138839",
+      "remaining": 14349052
     },
     "Timer": {
-      "state": "default"
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     }
   }
 }
