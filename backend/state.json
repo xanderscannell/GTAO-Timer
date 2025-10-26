@@ -1,0 +1,65 @@
+{
+  "isPaused": true,
+  "timers": {
+    "Cayo Perico": {
+      "state": "paused",
+      "remaining": "8624979"
+    },
+    "Dre Contract": {
+      "state": "paused",
+      "remaining": "2865351"
+    },
+    "Acid": {
+      "state": "default"
+    },
+    "Bunker": {
+      "state": "default"
+    },
+    "Cocaine": {
+      "state": "default"
+    },
+    "Meth": {
+      "state": "default"
+    },
+    "Weed": {
+      "state": "default"
+    },
+    "Cash Creation": {
+      "state": "paused",
+      "remaining": "9225761"
+    },
+    "Doc. Forgery": {
+      "state": "paused",
+      "remaining": "9226086"
+    },
+    "Warehouse 1": {
+      "state": "default"
+    },
+    "Warehouse 2": {
+      "state": "default"
+    },
+    "Warehouse 3": {
+      "state": "default"
+    },
+    "Warehouse 4": {
+      "state": "default"
+    },
+    "Warehouse 5": {
+      "state": "default"
+    },
+    "Hanger": {
+      "state": "default"
+    },
+    "Nightclub": {
+      "state": "paused",
+      "remaining": "5746736"
+    },
+    "Tow Truck": {
+      "state": "paused",
+      "remaining": "14387091"
+    },
+    "Timer": {
+      "state": "default"
+    }
+  }
+}
