@@ -2,10 +2,9 @@
 document.addEventListener("DOMContentLoaded", () => {
     
     // --- Get all our elements ---
-    const timerButton = document.getElementById("timerButton");
     const darkModeToggle = document.getElementById("darkModeToggle");
     
-    // --- Theme Toggle Logic ---
+    // --- Theme Toggle Logic (Unchanged) ---
     
     // 1. Check for saved theme in localStorage
     const savedTheme = localStorage.getItem("theme") || "light";
@@ -24,133 +23,122 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
 
-    // --- Timer Logic (Existing) ---
+    // --- Timer Logic (MODIFIED) ---
 
-    // We'll use this to store the ID of our setInterval, so we can stop it later
-    let timerInterval = null;
+    // Get ALL timer buttons on the page
+    const allTimerButtons = document.querySelectorAll(".timer-button");
 
-    // We'll store the last displayed time string here.
-    // This prevents us from updating the button text if the time hasn't changed.
-    let lastDisplayedTime = "";
-
-    // --- Main Click Event Handler ---
-    timerButton.addEventListener("click", () => {
-        const currentState = timerButton.dataset.state;
-
-        if (currentState === "default") {
-            // If the button is in its default state, start the timer
-            startTimer();
-        } else if (currentState === "ready") {
-            // If the timer is finished and green, reset it
-            resetTimer();
-        }
-        // If currentState is "cooldown", do nothing
-    });
-
-    /**
-     * Starts the countdown.
-     */
-    function startTimer() {
-        // Get the cooldown period from the button's data attribute (e.g., "2880" seconds)
-        const cooldownSeconds = parseInt(timerButton.dataset.cooldown, 10);
+    // Loop over each button and apply the timer logic to it
+    allTimerButtons.forEach(timerButton => {
         
-        // Calculate the exact time when the timer should end
-        const endTime = Date.now() + cooldownSeconds * 1000;
-
-        // --- Set Cooldown State ---
-        timerButton.dataset.state = "cooldown";
-        timerButton.disabled = true; // Disable the button so it can't be clicked
-
-        // --- NEW ---
-        // Clear any previously stored time
-        lastDisplayedTime = ""; 
-
-        // Run the updateTimer function immediately to show the initial time
-        updateTimer(endTime); 
-
-        // --- MODIFIED ---
-        // Run the updateTimer function every 100 milliseconds (10 times a second).
-        // This is much faster and will catch the exact moment the second changes.
-        timerInterval = setInterval(() => {
-            updateTimer(endTime);
-        }, 100);
-    }
-
-    /**
-     * Updates the button's text with the remaining time.
-     * @param {number} endTime - The timestamp when the timer ends.
-     */
-    function updateTimer(endTime) {
-        // Get the remaining milliseconds
-        const remainingTime = endTime - Date.now();
+        // These variables are now LOCAL to each button's scope.
+        let timerInterval = null;
+        let lastDisplayedTime = "";
         
         // --- NEW ---
-        // We'll build the new time string that *should* be displayed.
-        let newTimeHTML;
+        // Get the timer's specific name from its data-name attribute
+        const timerName = timerButton.dataset.name;
 
-        if (remainingTime <= 0) {
-            // --- Timer Finished ---
-            // Stop the interval *before* calling finishTimer
-            clearInterval(timerInterval);
-            finishTimer();
-            // We return here because finishTimer() will set the final text
-            return; 
-        } else {
-            // --- Timer Running ---
+
+        // --- Main Click Event Handler (now inside the loop) ---
+        timerButton.addEventListener("click", () => {
+            const currentState = timerButton.dataset.state;
+
+            if (currentState === "default") {
+                startTimer();
+            } else if (currentState === "ready") {
+                resetTimer();
+            }
+        });
+
+        /**
+         * Starts the countdown.
+         */
+        function startTimer() {
+            // Get the cooldown period from this specific button
+            const cooldownSeconds = parseInt(timerButton.dataset.cooldown, 10);
             
-            // --- MODIFIED LOGIC ---
-            const totalSeconds = Math.floor(remainingTime / 1000);
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
+            const endTime = Date.now() + cooldownSeconds * 1000;
 
-            // Format minutes and seconds with leading zeros
-            const formattedMinutes = String(minutes).padStart(2, '0');
-            const formattedSeconds = String(seconds).padStart(2, '0');
+            timerButton.dataset.state = "cooldown";
+            timerButton.disabled = true; 
 
-            if (hours > 0) {
-                // Display H:MM:SS (e.g., "1:05:01")
-                // We don't pad the 'hours'
-                newTimeHTML = `Timer<br>${hours}:${formattedMinutes}:${formattedSeconds}`;
+            lastDisplayedTime = ""; 
+
+            updateTimer(endTime); 
+
+            timerInterval = setInterval(() => {
+                updateTimer(endTime);
+            }, 100);
+        }
+
+        /**
+         * Updates this button's text with the remaining time.
+         * @param {number} endTime - The timestamp when the timer ends.
+         */
+        function updateTimer(endTime) {
+            const remainingTime = endTime - Date.now();
+            
+            let newTimeHTML;
+
+            if (remainingTime <= 0) {
+                clearInterval(timerInterval);
+                finishTimer();
+                return; 
             } else {
-                // Display MM:SS (e.g., "59:01")
-                newTimeHTML = `Timer<br>${formattedMinutes}:${formattedSeconds}`;
+                // --- Timer Running (Logic unchanged) ---
+                const totalSeconds = Math.floor(remainingTime / 1000);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+
+                const formattedMinutes = String(minutes).padStart(2, '0');
+                const formattedSeconds = String(seconds).padStart(2, '0');
+
+                // --- MODIFIED ---
+                // Use the 'timerName' variable instead of the hardcoded "Timer"
+                if (hours > 0) {
+                    newTimeHTML = `${timerName}<br>${hours}:${formattedMinutes}:${formattedSeconds}`;
+                } else {
+                    newTimeHTML = `${timerName}<br>${formattedMinutes}:${formattedSeconds}`;
+                }
+            }
+
+            if (newTimeHTML !== lastDisplayedTime) {
+                timerButton.innerHTML = newTimeHTML;
+                lastDisplayedTime = newTimeHTML;
             }
         }
 
-        // --- NEW ---
-        // Only update the button's text if the new time is different
-        // from what's already displayed. This is the key to fixing the "skip"
-        // and improving performance.
-        if (newTimeHTML !== lastDisplayedTime) {
-            timerButton.innerHTML = newTimeHTML;
-            lastDisplayedTime = newTimeHTML; // Store the new time
+        /**
+         * Stops the interval and sets this button to its "ready" state.
+         */
+        function finishTimer() {
+            clearInterval(timerInterval); 
+            timerButton.dataset.state = "ready";
+            timerButton.disabled = false;
+            
+            // --- MODIFIED ---
+            // Use the 'timerName' variable
+            const finishedTimeHTML = `${timerName}<br>00:00`;
+            if (lastDisplayedTime !== finishedTimeHTML) {
+                timerButton.innerHTML = finishedTimeHTML;
+                lastDisplayedTime = finishedTimeHTML;
+            }
         }
-    }
 
-    /**
-     * Stops the interval and sets the button to its "ready" (green) state.
-     */
-    function finishTimer() {
-        clearInterval(timerInterval); // Stop the countdown (good to have here too)
-        timerButton.dataset.state = "ready";
-        timerButton.disabled = false; // Re-enable the button
-        
-        const finishedTimeHTML = "Timer<br>00:00";
-        // Only update if it's not already "00:00"
-        if (lastDisplayedTime !== finishedTimeHTML) {
-            timerButton.innerHTML = finishedTimeHTML;
-            lastDisplayedTime = finishedTimeHTML;
+        /**
+         * Resets this button to its original "default" (blue) state.
+         */
+        function resetTimer() {
+            timerButton.dataset.state = "default";
+            
+            // --- MODIFIED ---
+            // Use the 'timerName' variable
+            timerButton.innerHTML = timerName;
+            lastDisplayedTime = timerName; // Update our stored text
         }
-    }
 
-    /**
-     * Resets the button to its original "default" (blue) state.
-     */
-    function resetTimer() {
-        timerButton.dataset.state = "default";
-        timerButton.innerHTML = "Timer";
-        lastDisplayedTime = "Timer"; // Update our stored text
-    }
+    }); // --- End of the forEach loop ---
+
 });
-

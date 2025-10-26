@@ -13,14 +13,25 @@ body[data-theme="dark"] {
     --toggle-icon-color: #f4f7f6;
 }
 
-/* Basic page setup to center everything */
-body, html {
+/* --- MODIFIED --- */
+/* Basic page setup */
+html {
     height: 100%;
-    width: 100%; /* <-- This was the fix from before */
+    width: 100%;
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    display: grid;
-    place-items: center;
+}
+
+/* We use flexbox to center the content vertically and horizontally */
+body {
+    width: 100%;
+    min-height: 100%; /* Ensure it fills at least the whole screen */
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center horizontally */
+    padding: 2rem 0; /* Add some padding at top/bottom */
+    box-sizing: border-box; /* Include padding in height calculation */
     
     /* Use the CSS variable */
     background-color: var(--bg-color);
@@ -59,15 +70,12 @@ body, html {
 }
 
 /* --- Icon Visibility Logic --- */
-/* In light mode, hide the sun and show the moon */
 body[data-theme="light"] .sun-icon {
     display: none;
 }
 body[data-theme="light"] .moon-icon {
     display: block;
 }
-
-/* In dark mode, hide the moon and show the sun */
 body[data-theme="dark"] .sun-icon {
     display: block;
 }
@@ -75,13 +83,36 @@ body[data-theme="dark"] .moon-icon {
     display: none;
 }
 
-.timer-container {
+/* --- Title Style (Unchanged) --- */
+.main-title {
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: var(--text-color); 
+    margin-bottom: 0.5rem;
     text-align: center;
+    transition: color 0.3s ease;
 }
 
+/* --- REMOVED .timer-container --- */
+
+/* --- NEW: Timer Grid Container --- */
+.timer-grid {
+    display: grid;
+    /* This creates 6 equal-width columns */
+    grid-template-columns: repeat(6, 1fr);
+    /* Add some spacing between the buttons */
+    gap: 16px; 
+    
+    /* Set a max width for the grid */
+    width: 90%;
+    max-width: 1400px;
+    margin-top: 1rem; /* Space below the title */
+}
+
+/* --- MODIFIED --- */
 .timer-button {
     /* Sizing and layout */
-    width: 200px;
+    width: 100%; /* <-- CHANGED: Button now fills its grid cell */
     height: 100px;
     padding: 1rem;
     
@@ -106,9 +137,7 @@ body[data-theme="dark"] .moon-icon {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
-/* --- STATE STYLES --- 
-  We use the 'data-state' attribute from our HTML to apply different styles.
-*/
+/* --- STATE STYLES (Unchanged) --- */
 
 /* 1. Default state (blue) */
 .timer-button[data-state="default"] {
@@ -126,18 +155,4 @@ body[data-theme="dark"] .moon-icon {
 /* 3. Ready state (green) */
 .timer-button[data-state="ready"] {
     background-color: #34c759; /* A vibrant green */
-}
-
-/* === NEW TITLE STYLE ADDED HERE === */
-.main-title {
-    font-size: 2.2rem;
-    font-weight: 600;
-    /* This variable handles the light/dark mode color */
-    color: var(--text-color); 
-    margin-bottom: 0.5rem; /* Adds a little space above the button */
-    /* Grid (on body) already centers it horizontally, 
-      but text-align is good practice. 
-    */
-    text-align: center;
-    transition: color 0.3s ease; /* Match the body's color transition */
 }
