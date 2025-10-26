@@ -16,6 +16,7 @@ body[data-theme="dark"] {
 /* Basic page setup to center everything */
 body, html {
     height: 100%;
+    width: 100%; /* <-- This was the fix from before */
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     display: grid;
@@ -125,4 +126,18 @@ body[data-theme="dark"] .moon-icon {
 /* 3. Ready state (green) */
 .timer-button[data-state="ready"] {
     background-color: #34c759; /* A vibrant green */
+}
+
+/* === NEW TITLE STYLE ADDED HERE === */
+.main-title {
+    font-size: 2.2rem;
+    font-weight: 600;
+    /* This variable handles the light/dark mode color */
+    color: var(--text-color); 
+    margin-bottom: 0.5rem; /* Adds a little space above the button */
+    /* Grid (on body) already centers it horizontally, 
+      but text-align is good practice. 
+    */
+    text-align: center;
+    transition: color 0.3s ease; /* Match the body's color transition */
 }
