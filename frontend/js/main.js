@@ -76,16 +76,25 @@ document.addEventListener("DOMContentLoaded", () => {
             return; 
         } else {
             // --- Timer Running ---
-            // Convert remaining time to minutes and seconds
-            const minutes = Math.floor((remainingTime / 1000 / 60) % 60);
-            const seconds = Math.floor((remainingTime / 1000) % 60);
+            
+            // --- MODIFIED LOGIC ---
+            const totalSeconds = Math.floor(remainingTime / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
 
-            // Format the time as "MM:SS" (e.g., "05:01")
+            // Format minutes and seconds with leading zeros
             const formattedMinutes = String(minutes).padStart(2, '0');
             const formattedSeconds = String(seconds).padStart(2, '0');
 
-            // Update the button's text (using <br> for the new line)
-            newTimeHTML = `Timer<br>${formattedMinutes}:${formattedSeconds}`;
+            if (hours > 0) {
+                // Display H:MM:SS (e.g., "1:05:01")
+                // We don't pad the 'hours'
+                newTimeHTML = `Timer<br>${hours}:${formattedMinutes}:${formattedSeconds}`;
+            } else {
+                // Display MM:SS (e.g., "59:01")
+                newTimeHTML = `Timer<br>${formattedMinutes}:${formattedSeconds}`;
+            }
         }
 
         // --- NEW ---
@@ -123,4 +132,5 @@ document.addEventListener("DOMContentLoaded", () => {
         lastDisplayedTime = "Timer"; // Update our stored text
     }
 });
+
 
