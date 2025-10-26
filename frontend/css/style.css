@@ -1,0 +1,62 @@
+/* Basic page setup to center everything */
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: grid;
+    place-items: center;
+    background-color: #f4f7f6;
+}
+
+.timer-container {
+    text-align: center;
+}
+
+.timer-button {
+    /* Sizing and layout */
+    width: 200px;
+    height: 100px;
+    padding: 1rem;
+    
+    /* Font styles */
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+    line-height: 1.4; /* Allows for the two-line text */
+    
+    /* Appearance */
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    
+    /* Interaction */
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.timer-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* --- STATE STYLES --- 
+  We use the 'data-state' attribute from our HTML to apply different styles.
+*/
+
+/* 1. Default state (blue) */
+.timer-button[data-state="default"] {
+    background-color: #007aff; /* A nice blue */
+}
+
+/* 2. Cooldown state (grey) */
+.timer-button[data-state="cooldown"] {
+    background-color: #8e8e93; /* A neutral grey */
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* 3. Ready state (green) */
+.timer-button[data-state="ready"] {
+    background-color: #34c759; /* A vibrant green */
+}
