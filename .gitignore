@@ -18,3 +18,6 @@ Thumbs.db
 
 # Dependency directories (if you install locally)
 node_modules/
+
+# User's timer data
+state.json
