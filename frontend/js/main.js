@@ -146,18 +146,46 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Initialize Each Timer Button
     allTimerButtons.forEach(timerButton => {
+        
         timerButton.timerInterval = null;
         timerButton.lastDisplayedTime = timerButton.dataset.name;
-        updateAriaLabel(timerButton); // Set initial ARIA label
 
         timerButton.addEventListener("click", () => {
-            if (isOffline) return; // Check if app is 'Offline'
             const currentState = timerButton.dataset.state;
 
-            if (currentState === "default") {
-                startTimer(timerButton);
-            } else if (currentState === "ready") {
-                resetTimer(timerButton);
+            if (isOffline) {
+                // Offline click logic
+                if (currentState === "ready") {
+                    // Reset a finished timer (green -> blue)
+                    resetTimer(timerButton);
+                } else if (currentState === "default") {
+                    // Start a new timer directly into paused mode (blue -> orange)
+                    const cooldownSeconds = parseInt(timerButton.dataset.cooldown, 10);
+                    const remainingMs = cooldownSeconds * 1000;
+                    
+                    timerButton.dataset.remaining = remainingMs;
+                    timerButton.dataset.state = "paused";
+                    timerButton.disabled = true;
+                    
+                    // Use updateTimer to set the initial time display
+                    const fakeEndTime = Date.now() + remainingMs;
+                    updateTimer(timerButton, fakeEndTime); 
+                    
+                    updateAriaLabel(timerButton);
+                    saveState();
+                }
+                // In offline mode, clicking a 'cooldown' (grey) or 'paused' (orange) button does nothing.
+
+            } else {
+                // Online click logic
+                if (currentState === "default") {
+                    // Start a timer normally (blue -> grey)
+                    startTimer(timerButton);
+                } else if (currentState === "ready") {
+                    // Reset a finished timer (green -> blue)
+                    resetTimer(timerButton);
+                }
+                // In online mode, clicking a 'cooldown' (grey) or 'paused' (orange) button does nothing.
             }
         });
     });
@@ -461,6 +489,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }, 3000); // Poll every 3 seconds
 });
+
 
 
 
