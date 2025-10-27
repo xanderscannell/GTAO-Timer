@@ -37,7 +37,7 @@ def atomic_write_json(data, filename):
         with open(STATE_FILE_TMP, 'w') as f:
             json.dump(data, f, indent=2)
         # shutil.move is an atomic operation on most POSIX systems
-        shutil.move(STATE_FILE_TMP, filename)
+        os.replace(STATE_FILE_TMP, filename)
         return True
     except Exception as e:
         print(f"Error during atomic write: {e}")
@@ -47,13 +47,11 @@ def atomic_write_json(data, filename):
         return False
 
 
-def pause_all_on_shutdown(sig, frame):
+def _save_paused_state():
     """
-    Catches Ctrl+C (SIGINT) or TERM, reads the last state, pauses all
-    running timers, and saves the new state before exiting.
+    Reads the last state, pauses all running timers,
+    and saves the new state. This function DOES NOT exit.
     """
-    print(f"\nSignal {sig} detected! Shutting down server...")
-
     # 1. Read the current state
     state = {"isPaused": False, "timers": {}}
     if os.path.exists(STATE_FILE):
@@ -63,8 +61,9 @@ def pause_all_on_shutdown(sig, frame):
                 if data:
                     state = json.loads(data)
         except Exception as e:
-            print(f"Could not read state file, exiting: {e}")
-            sys.exit(1)  # Exit with error if we can't read
+            print(f"Could not read state file: {e}")
+            # Don't exit, just log the error
+            return
 
     # 2. Modify the state to be "paused"
     state['isPaused'] = True
@@ -90,10 +89,16 @@ def pause_all_on_shutdown(sig, frame):
     else:
         print("Could not write new state file.")
 
-    # 4. Exit gracefully
-    # sys.exit(0)
-    # ^ Commented out to avoid issues with Flask's signal handling
 
+def pause_all_on_shutdown(sig, frame):
+    """
+    Catches Ctrl+C (SIGINT) or TERM, calls the save logic,
+    and then exits. This is for dev mode (running app.py) only.
+    """
+    print(f"\nSignal {sig} detected! Shutting down server...")
+    _save_paused_state()
+    print("Exiting.")
+    sys.exit(0)
 
 @app.route('/api/state', methods=['GET'])
 def get_state():

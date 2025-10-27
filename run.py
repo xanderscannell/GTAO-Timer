@@ -7,7 +7,7 @@ from time import sleep
 # --- Import the App ---
 # We will use PyInstaller flags to ensure 'app' is findable
 try:
-    from app import app, pause_all_on_shutdown # type: ignore
+    from app import app, _save_paused_state # type: ignore
 except ImportError as e:
     print("Fatal Error: Could not import the 'app' module.")
     print(f"Full error: {e}")
@@ -31,8 +31,7 @@ def on_closing():
     This triggers your graceful shutdown logic.
     """
     print("Window closing, pausing timers...")
-    # We pass 'None, None' as dummy args for the signal handler
-    pause_all_on_shutdown(None, None)
+    _save_paused_state()
 
 # --- Main Application Start ---
 if __name__ == '__main__':
