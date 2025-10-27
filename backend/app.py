@@ -4,39 +4,52 @@ import signal
 import sys
 import time
 import shutil  # For safer file moving
+import appdirs # For AppData path
 
 from flask import Flask, send_from_directory, request, jsonify
 
-# Path setup for state file (dev vs. bundled)
-# Check if the application is running as a bundled executable
+# Path setup (dev vs. bundled)
+# 1. Setup frontend path (this logic stays the same)
 if getattr(sys, 'frozen', False):
     # We are running in a bundle (e.g., PyInstaller .exe)
-    # Use sys._MEIPASS for bundled paths, and save state next to .exe
+    # sys._MEIPASS is the temp folder where PyInstaller unpacks
     base_path = sys._MEIPASS
-    state_save_path = os.path.dirname(sys.executable)
     frontend_folder = os.path.join(base_path, 'frontend')
 else:
     # We are running in a normal Python environment (development)
     base_path = os.path.dirname(__file__)
-    state_save_path = base_path
     frontend_folder = os.path.join(base_path, '..', 'frontend')
 
-# Define the path for our state file (writable location)
+
+# 2. Setup state file path
+APP_NAME = "GTAOTimer"
+APP_AUTHOR = "xanderscannell"
+
+# Get the OS-specific user data directory (e.g., AppData on Windows)
+state_save_path = appdirs.user_data_dir(APP_NAME, APP_AUTHOR)
+
+# Ensure this directory exists, create it if it doesn't
+os.makedirs(state_save_path, exist_ok=True)
+
+# Define the path for our state file inside that AppData folder
 STATE_FILE = os.path.join(state_save_path, 'state.json')
-STATE_FILE_TMP = STATE_FILE + '.tmp'
+STATE_FILE_TMP = f"{STATE_FILE}.tmp" # Use an f-string
+# End path setup
 
 # Initialize the Flask application
+# Now 'frontend_folder' is defined, so this will work
 app = Flask(__name__, static_folder=frontend_folder, static_url_path='')
+
 
 def atomic_write_json(data, filename):
     """
     Atomically writes JSON data to a file by writing to a temporary file
-    and then moving it to the final destination.
+    and then renaming it to the final destination.
     """
     try:
         with open(STATE_FILE_TMP, 'w') as f:
             json.dump(data, f, indent=2)
-        # shutil.move is an atomic operation on most POSIX systems
+        # os.replace is an atomic operation on Windows/Posix
         os.replace(STATE_FILE_TMP, filename)
         return True
     except Exception as e:
@@ -100,6 +113,7 @@ def pause_all_on_shutdown(sig, frame):
     print("Exiting.")
     sys.exit(0)
 
+
 @app.route('/api/state', methods=['GET'])
 def get_state():
     """API Endpoint to LOAD state"""
@@ -128,10 +142,12 @@ def save_state():
     else:
         return jsonify({"message": "Error saving state"}), 500
 
+
 @app.route('/')
 def index():
     """Route for serving the main HTML page"""
     return send_from_directory(frontend_folder, 'index.html')
+
 
 @app.route('/api/hello')
 def hello():
@@ -148,4 +164,3 @@ if __name__ == '__main__':
     # Use 0.0.0.0 to be accessible on the network
     # Set debug=False for a "release"
     app.run(debug=False, host='0.0.0.0', port=5000)
-
