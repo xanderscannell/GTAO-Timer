@@ -125,5 +125,5 @@ if __name__ == '__main__':
         signal.signal(signal.SIGINT, pause_all_on_shutdown)
         signal.signal(signal.SIGTERM, pause_all_on_shutdown) # <-- ADDED THIS LINE
     
-    app.run(debug=True)
+    app.run(debug=True, host='192.168.0.172') # <-- MODIFIED THIS LINE
 

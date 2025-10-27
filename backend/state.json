@@ -37,9 +37,8 @@
       "remaining": ""
     },
     "Cash Creation": {
-      "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "state": "paused",
+      "remaining": "9223311"
     },
     "Doc. Forgery": {
       "state": "default",
@@ -47,14 +46,12 @@
       "remaining": ""
     },
     "Warehouse 1": {
-      "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "state": "paused",
+      "remaining": "2863544"
     },
     "Warehouse 2": {
-      "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "state": "paused",
+      "remaining": "2862904"
     },
     "Warehouse 3": {
       "state": "default",
@@ -67,9 +64,8 @@
       "remaining": ""
     },
     "Warehouse 5": {
-      "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "state": "paused",
+      "remaining": "2862394"
     },
     "Hanger": {
       "state": "default",
