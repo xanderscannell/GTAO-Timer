@@ -48,7 +48,7 @@ if __name__ == '__main__':
     window = webview.create_window(
         'GTA Online Timer',  # Window Title
         'http://127.0.0.1:5000', # The URL of your app
-        width=1200,
+        width=1280,
         height=800
     )
 

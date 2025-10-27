@@ -91,8 +91,8 @@ body[data-theme="dark"] .moon-icon {
 /* Timer Grid Container */
 .timer-grid {
     display: grid;
-    /* Start with 2 columns for mobile */
-    grid-template-columns: repeat(2, 1fr);
+    /* Start with 1 column for mobile (CHANGED) */
+    grid-template-columns: repeat(1, 1fr);
     gap: 16px; 
     
     width: 90%;
@@ -216,6 +216,13 @@ body[data-theme="dark"] .moon-icon {
 
 /* Media Queries for Responsiveness */
 
+/* (ADDED) A new breakpoint for 2 columns */
+@media (min-width: 320px) {
+    .timer-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns */
+    }
+}
+
 /* Small devices (tablets, 600px and up) */
 @media (min-width: 600px) {
     .main-title {
@@ -254,4 +261,3 @@ body[data-theme="dark"] .moon-icon {
         grid-template-columns: repeat(6, 1fr); /* 6 columns */
     }
 }
-
