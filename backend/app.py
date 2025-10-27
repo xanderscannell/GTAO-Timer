@@ -3,10 +3,13 @@ import json
 import signal
 import sys
 import time
-import shutil  # For safer file moving
-import appdirs # For AppData path
+import shutil
+import appdirs
+import threading
 
 from flask import Flask, send_from_directory, request, jsonify
+
+file_lock = threading.RLock()
 
 # Path setup (dev vs. bundled)
 # 1. Setup frontend path (this logic stays the same)
@@ -23,7 +26,7 @@ else:
 
 # 2. Setup state file path
 APP_NAME = "GTAOTimer"
-APP_AUTHOR = "xanderscannell"
+APP_AUTHOR = "GTAOTimer"
 
 # Get the OS-specific user data directory (e.g., AppData on Windows)
 state_save_path = appdirs.user_data_dir(APP_NAME, APP_AUTHOR)
@@ -31,10 +34,19 @@ state_save_path = appdirs.user_data_dir(APP_NAME, APP_AUTHOR)
 # Ensure this directory exists, create it if it doesn't
 os.makedirs(state_save_path, exist_ok=True)
 
+# Use different state files for dev vs. production
+if getattr(sys, 'frozen', False):
+    # We are in production (bundled .exe)
+    state_filename = "state.json"
+else:
+    # We are in development (running .py script)
+    state_filename = "dev-state.json"
+
 # Define the path for our state file inside that AppData folder
-STATE_FILE = os.path.join(state_save_path, 'state.json')
-STATE_FILE_TMP = f"{STATE_FILE}.tmp" # Use an f-string
+STATE_FILE = os.path.join(state_save_path, state_filename)
+STATE_FILE_TMP = f"{STATE_FILE}.tmp"
 # End path setup
+
 
 # Initialize the Flask application
 # Now 'frontend_folder' is defined, so this will work
@@ -46,18 +58,19 @@ def atomic_write_json(data, filename):
     Atomically writes JSON data to a file by writing to a temporary file
     and then renaming it to the final destination.
     """
-    try:
-        with open(STATE_FILE_TMP, 'w') as f:
-            json.dump(data, f, indent=2)
-        # os.replace is an atomic operation on Windows/Posix
-        os.replace(STATE_FILE_TMP, filename)
-        return True
-    except Exception as e:
-        print(f"Error during atomic write: {e}")
-        # Clean up temp file if it exists
-        if os.path.exists(STATE_FILE_TMP):
-            os.remove(STATE_FILE_TMP)
-        return False
+    with file_lock:
+        try:
+            with open(STATE_FILE_TMP, 'w') as f:
+                json.dump(data, f, indent=2)
+            # os.replace is an atomic operation on Windows/Posix
+            os.replace(STATE_FILE_TMP, filename)
+            return True
+        except Exception as e:
+            print(f"Error during atomic write: {e}")
+            # Clean up temp file if it exists
+            if os.path.exists(STATE_FILE_TMP):
+                os.remove(STATE_FILE_TMP)
+            return False
 
 
 def _save_paused_state():
@@ -65,42 +78,43 @@ def _save_paused_state():
     Reads the last state, pauses all running timers,
     and saves the new state. This function DOES NOT exit.
     """
-    # 1. Read the current state
-    state = {"isPaused": False, "timers": {}}
-    if os.path.exists(STATE_FILE):
-        try:
-            with open(STATE_FILE, 'r') as f:
-                data = f.read()
-                if data:
-                    state = json.loads(data)
-        except Exception as e:
-            print(f"Could not read state file: {e}")
-            # Don't exit, just log the error
-            return
-
-    # 2. Modify the state to be "paused"
-    state['isPaused'] = True
-    now_ms = int(time.time() * 1000)
-
-    for timer_name, timer_data in state.get('timers', {}).items():
-        if timer_data.get('state') == 'cooldown':
+    with file_lock:
+        # 1. Read the current state
+        state = {"isPaused": False, "timers": {}}
+        if os.path.exists(STATE_FILE):
             try:
-                end_time_ms = int(timer_data.get('endTime', 0))
-                remaining_ms = end_time_ms - now_ms
+                with open(STATE_FILE, 'r') as f:
+                    data = f.read()
+                    if data:
+                        state = json.loads(data)
+            except Exception as e:
+                print(f"Could not read state file: {e}")
+                # Don't exit, just log the error
+                return
 
-                timer_data['state'] = 'paused'
-                timer_data['remaining'] = remaining_ms if remaining_ms > 0 else 0
-                print(f"  > Pausing timer: {timer_name}")
-            except (TypeError, ValueError) as e:
-                print(f"Error processing timer {timer_name}: {e}")
-                timer_data['state'] = 'default'
-                timer_data['remaining'] = 0
+        # 2. Modify the state to be "paused"
+        state['isPaused'] = True
+        now_ms = int(time.time() * 1000)
 
-    # 3. Write the new "all-paused" state back to the file
-    if atomic_write_json(state, STATE_FILE):
-        print("Paused state saved successfully.")
-    else:
-        print("Could not write new state file.")
+        for timer_name, timer_data in state.get('timers', {}).items():
+            if timer_data.get('state') == 'cooldown':
+                try:
+                    end_time_ms = int(timer_data.get('endTime', 0))
+                    remaining_ms = end_time_ms - now_ms
+
+                    timer_data['state'] = 'paused'
+                    timer_data['remaining'] = remaining_ms if remaining_ms > 0 else 0
+                    print(f"  > Pausing timer: {timer_name}")
+                except (TypeError, ValueError) as e:
+                    print(f"Error processing timer {timer_name}: {e}")
+                    timer_data['state'] = 'default'
+                    timer_data['remaining'] = 0
+
+        # 3. Write the new "all-paused" state back to the file
+        if atomic_write_json(state, STATE_FILE):
+            print("Paused state saved successfully.")
+        else:
+            print("Could not write new state file.")
 
 
 def pause_all_on_shutdown(sig, frame):
@@ -117,18 +131,19 @@ def pause_all_on_shutdown(sig, frame):
 @app.route('/api/state', methods=['GET'])
 def get_state():
     """API Endpoint to LOAD state"""
-    if not os.path.exists(STATE_FILE):
-        return jsonify({"isPaused": False, "timers": {}})
-    
-    try:
-        with open(STATE_FILE, 'r') as f:
-            data = f.read()
-            if not data:
-                return jsonify({"isPaused": False, "timers": {}})
-            return jsonify(json.loads(data))
-    except Exception as e:
-        print(f"Error reading state file: {e}")
-        return jsonify({"isPaused": False, "timers": {}}), 500
+    with file_lock:
+        if not os.path.exists(STATE_FILE):
+            return jsonify({"isPaused": False, "timers": {}})
+        
+        try:
+            with open(STATE_FILE, 'r') as f:
+                data = f.read()
+                if not data:
+                    return jsonify({"isPaused": False, "timers": {}})
+                return jsonify(json.loads(data))
+        except Exception as e:
+            print(f"Error reading state file: {e}")
+            return jsonify({"isPaused": False, "timers": {}}), 500
 
 
 @app.route('/api/state', methods=['POST'])
