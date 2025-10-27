@@ -2,90 +2,67 @@
   "isPaused": true,
   "timers": {
     "Cayo Perico": {
-      "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "state": "default"
     },
     "Dre Contract": {
-      "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "state": "default"
     },
     "Acid": {
       "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "endTime": "1761535675239"
     },
     "Bunker": {
-      "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "state": "default"
     },
     "Cocaine": {
-      "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "state": "default"
     },
     "Meth": {
-      "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "state": "default"
     },
     "Weed": {
-      "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "state": "default"
     },
     "Cash Creation": {
-      "state": "paused",
-      "remaining": "9223311"
+      "state": "default",
+      "endTime": "1761535466167",
+      "remaining": "9035104"
     },
     "Doc. Forgery": {
-      "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "state": "default"
     },
     "Warehouse 1": {
-      "state": "paused",
-      "remaining": "2863544"
+      "state": "default",
+      "endTime": "1761529107962",
+      "remaining": "2676899"
     },
     "Warehouse 2": {
-      "state": "paused",
-      "remaining": "2862904"
+      "state": "default"
     },
     "Warehouse 3": {
-      "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "state": "default"
     },
     "Warehouse 4": {
-      "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "state": "default"
     },
     "Warehouse 5": {
-      "state": "paused",
-      "remaining": "2862394"
+      "state": "default",
+      "endTime": "1761529120635",
+      "remaining": "2689572"
     },
     "Hanger": {
-      "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "state": "default"
     },
     "Nightclub": {
-      "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "state": "default"
     },
     "Tow Truck": {
       "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "endTime": "1761540628652",
+      "remaining": "14197589"
     },
     "Timer": {
-      "state": "default",
-      "endTime": "",
-      "remaining": ""
+      "state": "default"
     }
   }
 }

@@ -1,4 +1,3 @@
-// Add 'async' to the main function to allow 'await'
 document.addEventListener("DOMContentLoaded", async () => {
     
     // --- Get all our elements ---
@@ -9,6 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // --- Global Pause State ---
     let isPaused = false;
+    let lastState = {}; // NEW: To store the last known state
 
     // --- Theme Toggle Logic (Unchanged) ---
     
@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         localStorage.setItem("theme", newTheme);
     });
 
-    // --- Universal Timer Functions ---
+    // --- Timer Functions (Unchanged) ---
 
     /**
      * Starts the countdown for a specific button.
@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const cooldownSeconds = parseInt(timerButton.dataset.cooldown, 10);
         const endTime = Date.now() + cooldownSeconds * 1000;
 
-        // Store endTime on the element
+        // Store endTime on the element for pausing
         timerButton.dataset.endTime = endTime;
         
         timerButton.dataset.state = "cooldown";
@@ -48,8 +48,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             updateTimer(timerButton, endTime);
         }, 100);
 
-        // --- NEW: Save state to server ---
-        saveState();
+        saveState(); // Save state
     }
 
     /**
@@ -64,7 +63,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (remainingTime <= 0) {
             clearInterval(timerButton.timerInterval);
-            finishTimer(timerButton);
+            finishTimer(timerButton); // Calls finishTimer
             return; 
         } else {
             const totalSeconds = Math.floor(remainingTime / 1000);
@@ -95,6 +94,7 @@ document.addEventListener("DOMContentLoaded", async () => {
      */
     function finishTimer(timerButton) {
         clearInterval(timerButton.timerInterval); 
+        timerButton.timerInterval = null; // Explicitly clear
         timerButton.dataset.state = "ready";
         timerButton.disabled = false;
         
@@ -106,9 +106,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             timerButton.lastDisplayedTime = finishedTimeHTML;
         }
         
-        // Note: We don't need to call saveState() here
-        // because it will be called when the user
-        // clicks the 'ready' button to reset it.
+        // Don't save state here, let the user reset it
     }
 
     /**
@@ -125,27 +123,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         timerButton.innerHTML = timerName;
         timerButton.lastDisplayedTime = timerName;
 
-        // Clear persistence data for this timer
-        timerButton.dataset.endTime = "";
-        timerButton.dataset.remaining = "";
-
-        // --- NEW: Save state to server ---
-        saveState();
+        saveState(); // Save state
     }
 
-    // --- Initialize Each Timer Button ---
-    // Loop over each button and apply the timer logic to it
+    // --- Initialize Each Timer Button (Unchanged) ---
     allTimerButtons.forEach(timerButton => {
         
-        // Initialize state properties on the element itself
         timerButton.timerInterval = null;
         timerButton.lastDisplayedTime = timerButton.dataset.name;
 
-        // --- Main Click Event Handler ---
         timerButton.addEventListener("click", () => {
-            // Only allow click if timers are not globally paused
             if (isPaused) return;
-
             const currentState = timerButton.dataset.state;
 
             if (currentState === "default") {
@@ -161,15 +149,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 1. Reset All Button
     resetAllButton.addEventListener("click", () => {
         allTimerButtons.forEach(button => {
-            resetTimer(button); // resetTimer() already calls saveState()
+            // Manually reset without saving
+            clearInterval(button.timerInterval);
+            button.timerInterval = null;
+            button.dataset.state = "default";
+            button.disabled = false;
+            button.innerHTML = button.dataset.name;
+            button.lastDisplayedTime = button.dataset.name;
         });
 
-        // If timers were paused, reset the pause button too
         if (isPaused) {
             isPaused = false;
             pauseAllButton.textContent = "Pause All";
-            // saveState() is called by resetTimer()
         }
+        
+        saveState(); // Save state ONCE
     });
 
     // 2. Pause/Resume All Button
@@ -182,8 +176,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             allTimerButtons.forEach(button => {
                 if (button.dataset.state === "cooldown") {
                     clearInterval(button.timerInterval);
+                    button.timerInterval = null;
                     const endTime = parseInt(button.dataset.endTime, 10);
-                    // Store the *remaining milliseconds*
                     button.dataset.remaining = endTime - Date.now();
                     button.dataset.state = "paused";
                 }
@@ -195,11 +189,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                     const remaining = parseInt(button.dataset.remaining, 10);
                     const newEndTime = Date.now() + remaining;
 
-                    // Store new end time
                     button.dataset.endTime = newEndTime;
                     button.dataset.state = "cooldown";
                     
-                    // Immediately update text and restart interval
                     updateTimer(button, newEndTime);
                     button.timerInterval = setInterval(() => {
                         updateTimer(button, newEndTime);
@@ -207,12 +199,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             });
         }
-
-        // --- NEW: Save state to server ---
-        saveState();
+        
+        saveState(); // Save state
     });
 
-    // --- NEW: State Persistence Functions ---
+
+    // --- REFACTORED: State Persistence Functions ---
 
     /**
      * Gathers all timer data and saves it to the backend.
@@ -223,8 +215,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             const name = button.dataset.name;
             timerStates[name] = {
                 state: button.dataset.state,
-                endTime: button.dataset.endTime,     // Store 'endTime' for running timers
-                remaining: button.dataset.remaining  // Store 'remaining' for paused timers
+                endTime: button.dataset.endTime,
+                remaining: button.dataset.remaining
             };
         });
 
@@ -232,6 +224,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             isPaused: isPaused,
             timers: timerStates
         };
+        
+        // NEW: Update our local lastState immediately
+        lastState = appState;
 
         try {
             await fetch('/api/state', {
@@ -247,102 +242,107 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     /**
-     * Loads the state from the backend and "re-hydrates" the page.
+     * NEW: Re-usable function to apply a state object to the UI.
+     * This function does NOT call saveState() to prevent loops.
+     */
+    function syncUI(appState) {
+        // 1. Restore Global Pause State
+        isPaused = appState.isPaused || false;
+        pauseAllButton.textContent = isPaused ? "Resume All" : "Pause All";
+        
+        const timerStates = appState.timers || {};
+
+        // 2. Restore Individual Timers
+        allTimerButtons.forEach(button => {
+            const timerName = button.dataset.name;
+            const savedTimer = timerStates[timerName];
+            
+            // CRITICAL: Stop any existing timer to prevent duplicates
+            clearInterval(button.timerInterval);
+            button.timerInterval = null;
+
+            if (!savedTimer || savedTimer.state === "default") {
+                // --- Set to DEFAULT state ---
+                button.dataset.state = "default";
+                button.disabled = false;
+                button.innerHTML = timerName;
+                button.lastDisplayedTime = timerName;
+                
+            } else if (savedTimer.state === "ready") {
+                // --- Set to READY state ---
+                button.dataset.state = "ready";
+                button.disabled = false;
+                const finishedTimeHTML = `${timerName}<br>00:00`;
+                button.innerHTML = finishedTimeHTML;
+                button.lastDisplayedTime = finishedTimeHTML;
+
+            } else if (savedTimer.state === "paused") {
+                // --- Set to PAUSED state ---
+                const remaining = parseInt(savedTimer.remaining, 10);
+                button.dataset.remaining = remaining;
+                button.dataset.state = "paused";
+                button.disabled = true;
+                const fakeEndTime = Date.now() + remaining;
+                updateTimer(button, fakeEndTime); // updateTimer doesn't save
+
+            } else if (savedTimer.state === "cooldown") {
+                // --- Set to COOLDOWN state ---
+                const endTime = parseInt(savedTimer.endTime, 10);
+                
+                if (endTime > Date.now()) {
+                    // Timer is still running
+                    button.dataset.endTime = endTime;
+                    button.dataset.state = "cooldown";
+                    button.disabled = true;
+
+                    if (isPaused) {
+                        // App is globally paused, set button to paused
+                        button.dataset.remaining = endTime - Date.now();
+                        button.dataset.state = "paused";
+                        updateTimer(button, endTime);
+                    } else {
+                        // App is not paused, restart the interval
+                        updateTimer(button, endTime);
+                        button.timerInterval = setInterval(() => {
+                            updateTimer(button, endTime);
+                        }, 100);
+                    }
+                } else {
+                    // Timer finished while app was closed
+                    button.dataset.state = "ready";
+                    button.disabled = false;
+                    const finishedTimeHTML = `${timerName}<br>00:00`;
+                    button.innerHTML = finishedTimeHTML;
+                    button.lastDisplayedTime = finishedTimeHTML;
+                }
+            }
+        });
+    }
+
+    /**
+     * Loads the *initial* state from the backend.
      */
     async function loadState() {
         try {
             const response = await fetch('/api/state');
-            if (!response.ok) {
-                throw new Error('Failed to fetch state');
-            }
+            if (!response.ok) throw new Error('Failed to fetch state');
             const appState = await response.json();
-
-            // 1. Restore Global Pause State
-            isPaused = appState.isPaused || false;
-            pauseAllButton.textContent = isPaused ? "Resume All" : "Pause All";
-
-            // 2. Restore Individual Timers
-            allTimerButtons.forEach(button => {
-                const timerName = button.dataset.name;
-                const savedTimer = appState.timers[timerName];
-
-                if (!savedTimer) {
-                    // resetTimer(button); // Let's not reset, just in case.
-                    return;
-                }
-
-                // Restore state based on what was saved
-                switch (savedTimer.state) {
-                    case "cooldown":
-                        const endTime = parseInt(savedTimer.endTime, 10);
-                        if (endTime > Date.now()) {
-                            // Timer is still running
-                            button.dataset.endTime = endTime;
-                            button.dataset.state = "cooldown";
-                            button.disabled = true;
-
-                            // If app was paused, just show paused state
-                            if (isPaused) {
-                                button.dataset.remaining = endTime - Date.now();
-                                button.dataset.state = "paused";
-                                // Manually update text to last known time
-                                updateTimer(button, endTime); 
-                            } else {
-                                // Otherwise, restart the timer interval
-                                updateTimer(button, endTime);
-                                button.timerInterval = setInterval(() => {
-                                    updateTimer(button, endTime);
-                                }, 100);
-                            }
-                        } else {
-                            // Timer finished while app was closed
-                            finishTimer(button);
-                        }
-                        break;
-                    
-                    case "paused":
-                        // Timer was explicitly paused
-                        const remaining = parseInt(savedTimer.remaining, 10);
-                        if (remaining > 0) {
-                            button.dataset.remaining = remaining;
-                            button.dataset.state = "paused";
-                            button.disabled = true;
-
-                            // Calculate a "fake" endTime to pass to updateTimer
-                            const fakeEndTime = Date.now() + remaining;
-                            updateTimer(button, fakeEndTime);
-                        } else {
-                            // Paused but remaining time is zero, so it's ready
-                            finishTimer(button);
-                        }
-                        break;
-
-                    case "ready":
-                        finishTimer(button);
-                        break;
-
-                    case "default":
-                    default:
-                        // Do nothing, leave it at default
-                        resetTimer(button); // Call reset to ensure clean state
-                        break;
-                }
-            });
+            
+            lastState = appState; // Store this as our "last known" state
+            syncUI(appState);     // Apply this state to the UI
 
         } catch (error) {
-            console.error("Failed to load state:", error);
-            // If loading fails, just start fresh
+            console.error("Failed to load initial state:", error);
+            // If load fails, just start with default state
+            lastState = { isPaused: false, timers: {} };
+            syncUI(lastState);
         }
     }
-
-    // --- NEW: Save and Pause State on Browser Close ---
-    // We add this listener to the 'window' object.
-    // It fires when the tab or browser is closed.
+    
+    // --- Save and Pause State on Browser Close (Unchanged) ---
     window.addEventListener("unload", () => {
-        // NOTE: This function MUST be synchronous.
-        // We cannot use 'await fetch()' here as the browser will
-        // close the page before the request completes.
-
+        // This function is synchronous and uses sendBeacon
+        // (Copied from previous version)
         const timerStates = {};
         allTimerButtons.forEach(button => {
             const name = button.dataset.name;
@@ -350,12 +350,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             let endTime = button.dataset.endTime;
             let remaining = button.dataset.remaining;
 
-            // --- This is the key logic ---
-            // If a timer is actively running, we convert it
-            // to a 'paused' state before saving.
             if (state === "cooldown") {
                 state = "paused";
-                // Calculate the exact remaining time
                 const remainingMs = parseInt(endTime, 10) - Date.now();
                 remaining = remainingMs > 0 ? remainingMs : 0;
             }
@@ -368,24 +364,45 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         const appState = {
-            // Force the global state to 'paused'
             isPaused: true, 
             timers: timerStates
         };
 
-        // Convert the state object to a JSON string and then to a Blob.
         const blob = new Blob([JSON.stringify(appState)], { type: 'application/json' });
-        
-        // 'sendBeacon' is the ONLY reliable way to send data on page unload.
-        // It sends a POST request to our /api/state endpoint.
         navigator.sendBeacon('/api/state', blob);
     });
 
-    // --- Load the state when the page opens ---
+    // --- Load the initial state ---
     await loadState();
-    // After initial load, we do one save to clean up any timers
-    // that might have expired while the app was closed
-    // or to clean up states that are no longer valid.
-    saveState();
+    
+    // Save state once after loading to persist any timers
+    // that may have expired while the app was closed
+    saveState(); 
+    
+    // --- NEW: Polling for Changes ---
+    setInterval(async () => {
+        try {
+            const response = await fetch('/api/state');
+            if (!response.ok) {
+                console.warn("Polling: Server not reachable.");
+                return;
+            }
+            
+            const newState = await response.json();
+            
+            // Compare stringified JSON. If no change, do nothing.
+            if (JSON.stringify(newState) === JSON.stringify(lastState)) {
+                return;
+            }
 
+            // If a change is found:
+            console.log("Change detected from server, syncing UI...");
+            lastState = newState; // Update our local state
+            syncUI(newState);     // Re-sync the UI
+
+        } catch (error) {
+            console.warn("Polling for state failed:", error);
+        }
+    }, 3000); // Poll every 3 seconds
 });
+
