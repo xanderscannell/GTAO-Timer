@@ -19,7 +19,8 @@ def pause_all_on_shutdown(sig, frame):
     Catches Ctrl+C (SIGINT), reads the last state, pauses all running timers,
     and saves the new state before exiting.
     """
-    print("\nCtrl+C detected! Shutting down server...")
+    # Note: 'sig' will be signal.SIGINT or signal.SIGTERM
+    print(f"\nSignal {sig} detected! Shutting down server...")
     
     # 1. Read the current state
     state = {"isPaused": False, "timers": {}}
@@ -113,11 +114,16 @@ def index():
 @app.route('/api/hello')
 def hello():
     # We return JSON data. The browser will see: {"message": "Hello from the backend!"}
-    return {"message": "Hello from the backend!"}
+    return {"message": "Hello from thebackend!"}
 
 # This makes the server run when you execute the script directly
 if __name__ == '__main__':
     # --- NEW: Register the signal handler for Ctrl+C ---
-    signal.signal(signal.SIGINT, pause_all_on_shutdown)
+    # We check the WERKZEUG_RUN_MAIN env var to ensure this
+    # only runs in the *main* process, not the reloader's child.
+    if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
+        signal.signal(signal.SIGINT, pause_all_on_shutdown)
+        signal.signal(signal.SIGTERM, pause_all_on_shutdown) # <-- ADDED THIS LINE
     
     app.run(debug=True)
+
