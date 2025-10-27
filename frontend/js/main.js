@@ -3,11 +3,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Get all our elements
     const darkModeToggle = document.getElementById("darkModeToggle");
     const allTimerButtons = document.querySelectorAll(".timer-button");
-    const pauseAllButton = document.getElementById("pauseAllButton");
+    const onlineOfflineButton = document.getElementById("onlineOfflineButton"); // Renamed
     const resetAllButton = document.getElementById("resetAllButton");
 
-    // Global Pause State
-    let isPaused = false;
+    // Renamed 'isPaused' to 'isOffline' for clarity
+    let isOffline = false; 
     let lastState = {}; // To store the last known state
 
     // Theme Toggle Logic
@@ -151,7 +151,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateAriaLabel(timerButton); // Set initial ARIA label
 
         timerButton.addEventListener("click", () => {
-            if (isPaused) return;
+            if (isOffline) return; // Check if app is 'Offline'
             const currentState = timerButton.dataset.state;
 
             if (currentState === "default") {
@@ -176,21 +176,27 @@ document.addEventListener("DOMContentLoaded", async () => {
             updateAriaLabel(button); // Accessibility
         });
 
-        if (isPaused) {
-            isPaused = false;
-            pauseAllButton.textContent = "Pause All";
+        if (isOffline) {
+            isOffline = false;
+            // Update the Online/Offline button
+            onlineOfflineButton.textContent = "Online";
+            onlineOfflineButton.classList.remove("u-button-offline");
+            onlineOfflineButton.classList.add("u-button-online");
         }
         
         saveState(); // Save state ONCE
     });
 
-    // Pause/Resume All Button
-    pauseAllButton.addEventListener("click", () => {
-        isPaused = !isPaused; // Toggle the paused state
-        pauseAllButton.textContent = isPaused ? "Resume All" : "Pause All";
+    // Online/Offline Button
+    onlineOfflineButton.addEventListener("click", () => {
+        isOffline = !isOffline; // Toggle the offline state
 
-        if (isPaused) {
-            // PAUSE ALL
+        if (isOffline) {
+            // Going offline
+            onlineOfflineButton.textContent = "Offline";
+            onlineOfflineButton.classList.remove("u-button-online");
+            onlineOfflineButton.classList.add("u-button-offline");
+
             allTimerButtons.forEach(button => {
                 if (button.dataset.state === "cooldown") {
                     clearInterval(button.timerInterval);
@@ -198,12 +204,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                     const endTime = parseInt(button.dataset.endTime, 10);
                     const remainingMs = endTime - Date.now();
                     button.dataset.remaining = remainingMs > 0 ? remainingMs : 0;
-                    button.dataset.state = "paused";
-                    updateAriaLabel(button); // Accessibility
+                    button.dataset.state = "paused"; // Backend state is still 'paused'
+                    updateAriaLabel(button); 
                 }
             });
         } else {
-            // RESUME ALL
+            // Going online
+            onlineOfflineButton.textContent = "Online";
+            onlineOfflineButton.classList.remove("u-button-offline");
+            onlineOfflineButton.classList.add("u-button-online");
+
             allTimerButtons.forEach(button => {
                 if (button.dataset.state === "paused") {
                     const remaining = parseInt(button.dataset.remaining, 10);
@@ -211,7 +221,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     button.dataset.endTime = newEndTime;
                     button.dataset.state = "cooldown";
-                    updateAriaLabel(button); // Accessibility
+                    updateAriaLabel(button); 
                     
                     updateTimer(button, newEndTime);
                     button.timerInterval = setInterval(() => {
@@ -243,7 +253,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         return {
-            isPaused: isPaused,
+            isPaused: isOffline, // Map 'isOffline' to 'isPaused' for the backend
             timers: timerStates
         };
     }
@@ -276,9 +286,19 @@ document.addEventListener("DOMContentLoaded", async () => {
      * This function does NOT call saveState() to prevent loops.
      */
     function syncUI(appState) {
-        // Restore Global Pause State
-        isPaused = appState.isPaused || false;
-        pauseAllButton.textContent = isPaused ? "Resume All" : "Pause All";
+        // Restore Online/Offline State
+        // The backend state is still called 'isPaused'
+        isOffline = appState.isPaused || false; 
+        
+        if (isOffline) {
+            onlineOfflineButton.textContent = "Offline";
+            onlineOfflineButton.classList.remove("u-button-online");
+            onlineOfflineButton.classList.add("u-button-offline");
+        } else {
+            onlineOfflineButton.textContent = "Online";
+            onlineOfflineButton.classList.remove("u-button-offline");
+            onlineOfflineButton.classList.add("u-button-online");
+        }
         
         const timerStates = appState.timers || {};
 
@@ -327,8 +347,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                     button.dataset.endTime = endTime;
                     button.disabled = true;
 
-                    if (isPaused) {
-                        // App is globally paused, set button to paused
+                    if (isOffline) { // Check 'isOffline'
+                        // App is globally offline, set button to paused
                         finalState = 'paused';
                         button.dataset.remaining = endTime - Date.now();
                         button.dataset.state = "paused";
@@ -410,6 +430,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Load the initial state
     await loadState();
     
+    // Removed the auto-click logic. App now loads in its last saved state.
+    
     // Save state once after loading to persist any timers
     // that may have expired while the app was closed
     saveState(); 
@@ -439,5 +461,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }, 3000); // Poll every 3 seconds
 });
+
 
 

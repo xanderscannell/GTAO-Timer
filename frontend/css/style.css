@@ -200,10 +200,19 @@ body[data-theme="dark"] .moon-icon {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
-.u-button-danger {
-    background-color: #ff3b30; /* A danger red */
+/* Renamed danger to warning and changed color to orange */
+.u-button-warning {
+    background-color: #ff9500; /* Orange */
 }
 
+/* Added new classes for the Online/Offline button */
+.u-button-online {
+    background-color: #34c759; /* Green */
+}
+
+.u-button-offline {
+    background-color: #ff3b30; /* Red */
+}
 
 /* Media Queries for Responsiveness */
 
