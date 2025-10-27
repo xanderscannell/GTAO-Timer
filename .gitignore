@@ -20,4 +20,13 @@ Thumbs.db
 node_modules/
 
 # User's timer data
+# This is now handled by appdirs, but good to keep in case
 state.json
+
+# PyInstaller build artifacts
+build/
+dist/
+*.spec
+
+# Crash logs
+gtao-timer-crash.log
