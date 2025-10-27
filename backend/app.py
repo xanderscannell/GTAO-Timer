@@ -1,4 +1,8 @@
 import os
+import json # Moved to top
+import signal # NEW: To catch shutdown signals
+import sys # NEW: To exit the program
+import time # NEW: To calculate time
 from flask import Flask, send_from_directory, request, jsonify
 
 # Initialize the Flask application
@@ -8,7 +12,61 @@ app = Flask(__name__, static_folder='../frontend', static_url_path='')
 # This will create 'state.json' inside the 'backend' folder.
 STATE_FILE = os.path.join(os.path.dirname(__file__), 'state.json')
 
-# --- NEW: API Endpoint to LOAD state ---
+
+# --- NEW: Shutdown Handler ---
+def pause_all_on_shutdown(sig, frame):
+    """
+    Catches Ctrl+C (SIGINT), reads the last state, pauses all running timers,
+    and saves the new state before exiting.
+    """
+    print("\nCtrl+C detected! Shutting down server...")
+    
+    # 1. Read the current state
+    state = {"isPaused": False, "timers": {}}
+    if os.path.exists(STATE_FILE):
+        try:
+            with open(STATE_FILE, 'r') as f:
+                data = f.read()
+                if data:
+                    state = json.loads(data)
+        except Exception as e:
+            print(f"Could not read state file, exiting: {e}")
+            sys.exit(1) # Exit with error if we can't read
+
+    # 2. Modify the state to be "paused"
+    state['isPaused'] = True
+    # Get current time in milliseconds (to match JavaScript's Date.now())
+    now_ms = int(time.time() * 1000) 
+
+    for timer_name, timer_data in state.get('timers', {}).items():
+        if timer_data.get('state') == 'cooldown':
+            try:
+                # 'endTime' might be a string, ensure it's an int/float
+                end_time_ms = int(timer_data.get('endTime', 0))
+                remaining_ms = end_time_ms - now_ms
+                
+                timer_data['state'] = 'paused'
+                timer_data['remaining'] = remaining_ms if remaining_ms > 0 else 0
+                print(f"  > Pausing timer: {timer_name}")
+            except (TypeError, ValueError) as e:
+                # Handle bad data just in case
+                print(f"Error processing timer {timer_name}: {e}")
+                timer_data['state'] = 'default'
+                timer_data['remaining'] = 0
+
+    # 3. Write the new "all-paused" state back to the file
+    try:
+        with open(STATE_FILE, 'w') as f:
+            json.dump(state, f, indent=2)
+        print("Paused state saved successfully.")
+    except Exception as e:
+        print(f"Could not write new state file: {e}")
+
+    # 4. Exit gracefully
+    sys.exit(0)
+
+
+# --- API Endpoint to LOAD state ---
 @app.route('/api/state', methods=['GET'])
 def get_state():
     # Check if the state file exists
@@ -29,7 +87,7 @@ def get_state():
         # Return default state on error
         return jsonify({"isPaused": False, "timers": {}}), 500
 
-# --- NEW: API Endpoint to SAVE state ---
+# --- API Endpoint to SAVE state ---
 @app.route('/api/state', methods=['POST'])
 def save_state():
     # Get the JSON data sent from the frontend
@@ -57,8 +115,9 @@ def hello():
     # We return JSON data. The browser will see: {"message": "Hello from the backend!"}
     return {"message": "Hello from the backend!"}
 
-# This makes the server run when you execute the script directly (Unchanged)
+# This makes the server run when you execute the script directly
 if __name__ == '__main__':
-    # Need to import json at the top
-    import json
+    # --- NEW: Register the signal handler for Ctrl+C ---
+    signal.signal(signal.SIGINT, pause_all_on_shutdown)
+    
     app.run(debug=True)

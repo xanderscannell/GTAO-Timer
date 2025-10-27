@@ -2,14 +2,14 @@
   "isPaused": true,
   "timers": {
     "Cayo Perico": {
-      "state": "paused",
-      "endTime": "1761531376727",
-      "remaining": 8586940
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     },
     "Dre Contract": {
-      "state": "paused",
-      "endTime": "1761525617099",
-      "remaining": 2827312
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     },
     "Acid": {
       "state": "default",
@@ -37,14 +37,14 @@
       "remaining": ""
     },
     "Cash Creation": {
-      "state": "paused",
-      "endTime": "1761531977509",
-      "remaining": 9187722
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     },
     "Doc. Forgery": {
-      "state": "paused",
-      "endTime": "1761531977834",
-      "remaining": 9188047
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     },
     "Warehouse 1": {
       "state": "default",
@@ -77,14 +77,14 @@
       "remaining": ""
     },
     "Nightclub": {
-      "state": "paused",
-      "endTime": "1761528498484",
-      "remaining": 5708697
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     },
     "Tow Truck": {
-      "state": "paused",
-      "endTime": "1761537138839",
-      "remaining": 14349052
+      "state": "default",
+      "endTime": "",
+      "remaining": ""
     },
     "Timer": {
       "state": "default",
