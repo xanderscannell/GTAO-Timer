@@ -7,13 +7,26 @@ import shutil  # For safer file moving
 
 from flask import Flask, send_from_directory, request, jsonify
 
+# Path setup for state file (dev vs. bundled)
+# Check if the application is running as a bundled executable
+if getattr(sys, 'frozen', False):
+    # We are running in a bundle (e.g., PyInstaller .exe)
+    # Use sys._MEIPASS for bundled paths, and save state next to .exe
+    base_path = sys._MEIPASS
+    state_save_path = os.path.dirname(sys.executable)
+    frontend_folder = os.path.join(base_path, 'frontend')
+else:
+    # We are running in a normal Python environment (development)
+    base_path = os.path.dirname(__file__)
+    state_save_path = base_path
+    frontend_folder = os.path.join(base_path, '..', 'frontend')
+
+# Define the path for our state file (writable location)
+STATE_FILE = os.path.join(state_save_path, 'state.json')
+STATE_FILE_TMP = STATE_FILE + '.tmp'
+
 # Initialize the Flask application
-app = Flask(__name__, static_folder='../frontend', static_url_path='')
-
-# Define the path for our state file.
-STATE_FILE = os.path.join(os.path.dirname(__file__), 'state.json')
-STATE_FILE_TMP = STATE_FILE + '.tmp' # Temporary file for atomic writes
-
+app = Flask(__name__, static_folder=frontend_folder, static_url_path='')
 
 def atomic_write_json(data, filename):
     """
@@ -78,7 +91,8 @@ def pause_all_on_shutdown(sig, frame):
         print("Could not write new state file.")
 
     # 4. Exit gracefully
-    sys.exit(0)
+    # sys.exit(0)
+    # ^ Commented out to avoid issues with Flask's signal handling
 
 
 @app.route('/api/state', methods=['GET'])
@@ -109,12 +123,10 @@ def save_state():
     else:
         return jsonify({"message": "Error saving state"}), 500
 
-
 @app.route('/')
 def index():
     """Route for serving the main HTML page"""
-    return send_from_directory('../frontend', 'index.html')
-
+    return send_from_directory(frontend_folder, 'index.html')
 
 @app.route('/api/hello')
 def hello():
