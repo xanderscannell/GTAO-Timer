@@ -8,8 +8,9 @@
       "state": "default"
     },
     "Acid": {
-      "state": "default",
-      "endTime": "1761535675239"
+      "state": "paused",
+      "endTime": "1761538024046",
+      "remaining": "2188800"
     },
     "Bunker": {
       "state": "default"
@@ -24,42 +25,40 @@
       "state": "default"
     },
     "Cash Creation": {
-      "state": "default",
-      "endTime": "1761535466167",
-      "remaining": "9035104"
+      "state": "default"
     },
     "Doc. Forgery": {
       "state": "default"
     },
     "Warehouse 1": {
-      "state": "default",
-      "endTime": "1761529107962",
-      "remaining": "2676899"
+      "state": "ready",
+      "endTime": "1761531346043"
     },
     "Warehouse 2": {
-      "state": "default"
+      "state": "ready",
+      "endTime": "1761531384721"
     },
     "Warehouse 3": {
-      "state": "default"
+      "state": "ready",
+      "endTime": "1761531447102"
     },
     "Warehouse 4": {
-      "state": "default"
+      "state": "ready",
+      "endTime": "1761531465296"
     },
     "Warehouse 5": {
-      "state": "default",
-      "endTime": "1761529120635",
-      "remaining": "2689572"
+      "state": "ready",
+      "endTime": "1761531510041"
     },
     "Hanger": {
       "state": "default"
     },
     "Nightclub": {
-      "state": "default"
+      "state": "ready",
+      "endTime": "1761534451936"
     },
     "Tow Truck": {
-      "state": "default",
-      "endTime": "1761540628652",
-      "remaining": "14197589"
+      "state": "default"
     },
     "Timer": {
       "state": "default"
