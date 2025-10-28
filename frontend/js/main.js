@@ -11,14 +11,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     let lastState = {}; // To store the last known state
 
     // Theme Toggle Logic
-    const savedTheme = localStorage.getItem("theme") || "light";
-    document.body.dataset.theme = savedTheme;
-
     darkModeToggle.addEventListener("click", () => {
         let currentTheme = document.body.dataset.theme;
         let newTheme = currentTheme === "light" ? "dark" : "light";
         document.body.dataset.theme = newTheme;
-        localStorage.setItem("theme", newTheme);
+        saveState();
     });
 
     // Timer Functions
@@ -280,9 +277,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             };
         });
 
+        const currentTheme = document.body.dataset.theme || "light"; // Get current theme
         return {
             isPaused: isOffline, // Map 'isOffline' to 'isPaused' for the backend
-            timers: timerStates
+            timers: timerStates,
+            theme: currentTheme
         };
     }
 
@@ -315,9 +314,12 @@ document.addEventListener("DOMContentLoaded", async () => {
      */
     function syncUI(appState) {
         // Restore Online/Offline State
-        // The backend state is still called 'isPaused'
-        isOffline = appState.isPaused || false; 
+        isOffline = appState.isPaused || false; // The backend state is still called 'isPaused'
         
+        // Restore Theme
+        const savedTheme = appState.theme || "light"; // Default to light if not set
+        document.body.dataset.theme = savedTheme;
+
         if (isOffline) {
             onlineOfflineButton.textContent = "Offline";
             onlineOfflineButton.classList.remove("u-button-online");
@@ -458,8 +460,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Load the initial state
     await loadState();
     
-    // Removed the auto-click logic. App now loads in its last saved state.
-    
     // Save state once after loading to persist any timers
     // that may have expired while the app was closed
     saveState(); 
@@ -489,7 +489,4 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }, 3000); // Poll every 3 seconds
 });
-
-
-
 
